@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import type { Server } from 'http';
 import { AppModule } from '../../src/app.module';
+import { createTestApp } from '../setup/test-app.factory';
 import { Keypair } from 'stellar-sdk';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from '../../src/modules/user/entities/refresh-token.entity';
@@ -37,21 +38,7 @@ describe('Events (e2e)', () => {
     secondKeypair = createMockKeypair();
     secondWalletAddress = secondKeypair.publicKey();
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [User, RefreshToken, Escrow, Party, Condition, EscrowEvent],
-          synchronize: true,
-        }),
-      ],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    await app.init();
+    app = await createTestApp();
     httpServer = app.getHttpServer() as Server;
 
     // Authenticate first user
@@ -101,7 +88,7 @@ describe('Events (e2e)', () => {
         title: 'Test Escrow for Events',
         description: 'Test description',
         amount: 100,
-        asset: 'XLM',
+        asset: { code: 'XLM' },
         parties: [{ userId: secondUserId, role: PartyRole.SELLER }],
       });
 
