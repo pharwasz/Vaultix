@@ -3027,12 +3027,8 @@ fn test_list_escrows_by_depositor() {
     );
 
     // List escrows by depositor
-    let summaries = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &0u32,
-        &10u32,
-    );
+    let summaries =
+        client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &0u32, &10u32);
 
     assert_eq!(summaries.len(), 2);
     assert_eq!(summaries.get(0).unwrap().escrow_id, 1);
@@ -3088,12 +3084,8 @@ fn test_list_escrows_by_recipient() {
     );
 
     // List escrows by recipient
-    let summaries = client.list_escrows_by_party(
-        &recipient,
-        &symbol_short!("recipient"),
-        &0u32,
-        &10u32,
-    );
+    let summaries =
+        client.list_escrows_by_party(&recipient, &symbol_short!("recipient"), &0u32, &10u32);
 
     assert_eq!(summaries.len(), 2);
     assert_eq!(summaries.get(0).unwrap().escrow_id, 1);
@@ -3140,44 +3132,24 @@ fn test_list_escrows_pagination() {
     }
 
     // Test page 0 with page size 2
-    let page0 = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &0u32,
-        &2u32,
-    );
+    let page0 = client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &0u32, &2u32);
     assert_eq!(page0.len(), 2);
     assert_eq!(page0.get(0).unwrap().escrow_id, 1);
     assert_eq!(page0.get(1).unwrap().escrow_id, 2);
 
     // Test page 1 with page size 2
-    let page1 = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &1u32,
-        &2u32,
-    );
+    let page1 = client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &1u32, &2u32);
     assert_eq!(page1.len(), 2);
     assert_eq!(page1.get(0).unwrap().escrow_id, 3);
     assert_eq!(page1.get(1).unwrap().escrow_id, 4);
 
     // Test page 2 with page size 2 (should have 1 result)
-    let page2 = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &2u32,
-        &2u32,
-    );
+    let page2 = client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &2u32, &2u32);
     assert_eq!(page2.len(), 1);
     assert_eq!(page2.get(0).unwrap().escrow_id, 5);
 
     // Test page 3 with page size 2 (should be empty)
-    let page3 = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &3u32,
-        &2u32,
-    );
+    let page3 = client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &3u32, &2u32);
     assert_eq!(page3.len(), 0);
 }
 
@@ -3206,12 +3178,8 @@ fn test_list_escrows_page_size_limit() {
     assert_eq!(result, Err(Ok(Error::VectorTooLarge)));
 
     // Test page size of 0
-    let result = client.try_list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &0u32,
-        &0u32,
-    );
+    let result =
+        client.try_list_escrows_by_party(&depositor, &symbol_short!("depositor"), &0u32, &0u32);
     assert_eq!(result, Err(Ok(Error::VectorTooLarge)));
 }
 
@@ -3230,12 +3198,8 @@ fn test_list_escrows_invalid_role() {
     let depositor = Address::generate(&env);
 
     // Test invalid role parameter
-    let result = client.try_list_escrows_by_party(
-        &depositor,
-        &symbol_short!("invalid"),
-        &0u32,
-        &10u32,
-    );
+    let result =
+        client.try_list_escrows_by_party(&depositor, &symbol_short!("invalid"), &0u32, &10u32);
     assert_eq!(result, Err(Ok(Error::Unauthorized)));
 }
 
@@ -3254,12 +3218,8 @@ fn test_list_escrows_empty_party() {
     let depositor = Address::generate(&env);
 
     // Query for a party with no escrows
-    let summaries = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &0u32,
-        &10u32,
-    );
+    let summaries =
+        client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &0u32, &10u32);
     assert_eq!(summaries.len(), 0);
 }
 
@@ -3299,12 +3259,8 @@ fn test_list_escrows_returns_lightweight_summaries() {
         &valid_metadata_hash(&env),
     );
 
-    let summaries = client.list_escrows_by_party(
-        &depositor,
-        &symbol_short!("depositor"),
-        &0u32,
-        &10u32,
-    );
+    let summaries =
+        client.list_escrows_by_party(&depositor, &symbol_short!("depositor"), &0u32, &10u32);
 
     assert_eq!(summaries.len(), 1);
     let summary = summaries.get(0).unwrap();
@@ -3345,14 +3301,14 @@ fn test_max_fee_10000_bps_valid() {
 // Validates that ALL lifecycle events carry the four summary fields:
 //   - status:   EscrowStatus enum identifying the current lifecycle state
 //   - total_amount:    i128 total escrow value
-//   - total_released:  i128 amount released so far  
+//   - total_released:  i128 amount released so far
 //   - deadline: u64 deadline timestamp
 //
 // This guarantees that mobile clients and indexers can reconstruct
 // a full dashboard view from events alone + minimal storage reads.
 // ===============================================================================
 
-/// Verify that every lifecycle event struct embeds status, total_amount, 
+/// Verify that every lifecycle event struct embeds status, total_amount,
 /// total_released and deadline in deterministic positions.
 #[test]
 fn test_lifecycle_events_contain_all_summary_fields() {
@@ -3406,7 +3362,7 @@ fn test_lifecycle_events_contain_all_summary_fields() {
     assert_eq!(payload.deadline, deadline);
 }
 
-/// Walk through a full escrow lifecycle and verify that each event 
+/// Walk through a full escrow lifecycle and verify that each event
 /// carries the correct summary values at each stage.
 #[test]
 fn test_full_lifecycle_event_summaries_are_accurate() {
@@ -3504,7 +3460,7 @@ fn test_full_lifecycle_event_summaries_are_accurate() {
     assert_eq!(complete_event.deadline, deadline);
 }
 
-/// Verify deterministic event ordering: events are emitted in the same 
+/// Verify deterministic event ordering: events are emitted in the same
 /// order as the contract operations. A mobile client can replay events
 /// sequentially to reconstruct state.
 #[test]
@@ -3556,11 +3512,13 @@ fn test_event_ordering_is_deterministic() {
         Symbol::new(&env, "EscrowCreated"),
     )
         .into_val(&env);
-    assert_eq!(topics, expected_topics, 
-        "event topics must follow (Vaultix, v1, EventName) format");
+    assert_eq!(
+        topics, expected_topics,
+        "event topics must follow (Vaultix, v1, EventName) format"
+    );
 }
 
-/// Verify that event topics remain backwards-compatible and match the 
+/// Verify that event topics remain backwards-compatible and match the
 /// existing (Vaultix, v1, EventName) pattern — no breaking changes introduced.
 #[test]
 fn test_event_topics_are_backwards_compatible() {
@@ -3641,7 +3599,8 @@ fn test_event_topics_are_backwards_compatible() {
 
     for expected_name in expected_event_names.iter() {
         while event_idx < events.len() {
-            let topics: soroban_sdk::Vec<Val> = events.get(event_idx).unwrap().1.clone().into_val(&env);
+            let topics: soroban_sdk::Vec<Val> =
+                events.get(event_idx).unwrap().1.clone().into_val(&env);
             let expected_topics: soroban_sdk::Vec<Val> = (
                 Symbol::new(&env, "Vaultix"),
                 Symbol::new(&env, "v1"),
@@ -3663,9 +3622,11 @@ fn test_event_topics_are_backwards_compatible() {
             Symbol::new(&env, expected_name),
         )
             .into_val(&env);
-        assert_eq!(topics, canon_topic,
+        assert_eq!(
+            topics, canon_topic,
             "Event {} must use canonical topic format (Vaultix, v1, {})",
-            expected_name, expected_name);
+            expected_name, expected_name
+        );
 
         event_idx += 1;
     }
