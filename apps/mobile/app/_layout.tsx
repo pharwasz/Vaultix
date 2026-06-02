@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { ToastProvider } from '../components/Toast';
 
 export default function RootLayout() {
   return (
-    <>
+    <ToastProvider>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
@@ -18,6 +19,6 @@ export default function RootLayout() {
         <Stack.Screen name="escrow/create" options={{ title: 'Create Escrow' }} />
         <Stack.Screen name="escrow/release" options={{ title: 'Release Milestone' }} />
       </Stack>
-    </>
+    </ToastProvider>
   );
 }

@@ -14,6 +14,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { escrowApi } from '../../services/api';
 import { Escrow, Milestone, Party, EscrowEvent } from '../../types/escrow';
 import { OfflineBanner } from '../../components/OfflineBanner';
+import { CopyButton } from '../../components/CopyButton';
+import { ShareButton, buildEscrowShareUrl } from '../../components/ShareButton';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { toFriendlyError, isOfflineError } from '../../utils/errors';
 
@@ -68,11 +70,14 @@ function MilestoneRow({ milestone, canRelease, onRelease }: {
 function PartyRow({ party }: { party: Party }) {
   return (
     <View style={styles.partyRow}>
-      <Text style={styles.partyRole}>{party.role.toUpperCase()}</Text>
-      <Text style={styles.partyAddress} numberOfLines={1}>{party.walletAddress}</Text>
-      <Text style={[styles.partyStatus, party.status === 'accepted' && { color: '#06d6a0' }]}>
-        {party.status}
-      </Text>
+      <View style={styles.partyInfo}>
+        <Text style={styles.partyRole}>{party.role.toUpperCase()}</Text>
+        <Text style={styles.partyAddress} numberOfLines={1}>{party.walletAddress}</Text>
+        <Text style={[styles.partyStatus, party.status === 'accepted' && { color: '#06d6a0' }]}>
+          {party.status}
+        </Text>
+      </View>
+      <CopyButton value={party.walletAddress} label="Copy" compact />
     </View>
   );
 }
@@ -156,6 +161,12 @@ export default function EscrowDetailScreen() {
         </View>
       </View>
       <Text style={styles.description}>{escrow.description}</Text>
+
+      {/* Share & Copy row */}
+      <View style={styles.shareRow}>
+        <CopyButton value={escrow.id} label="Copy Escrow ID" toastMessage="Escrow ID copied!" variant="ghost" />
+        <ShareButton url={buildEscrowShareUrl(escrow.id)} label="Share Escrow" variant="primary" />
+      </View>
 
       {/* Amount & Deadline */}
       <View style={styles.metaRow}>
@@ -250,9 +261,11 @@ const styles = StyleSheet.create({
   pendingBadge: { backgroundColor: '#2d2d44', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   pendingText: { color: '#888', fontSize: 12 },
   partyRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e1e30', borderRadius: 10, padding: 12, marginBottom: 8 },
+  partyInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 4 },
   partyRole: { color: '#6c63ff', fontWeight: '700', fontSize: 11, width: 80 },
   partyAddress: { color: '#ccc', fontSize: 12, flex: 1 },
   partyStatus: { color: '#888', fontSize: 11, marginLeft: 8 },
+  shareRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, gap: 8 },
   timelineItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   timelineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#6c63ff', marginTop: 4, marginRight: 12 },
   timelineContent: { flex: 1 },
