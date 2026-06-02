@@ -6,11 +6,8 @@ import {
   CreateEscrowPayload,
   ReleaseMilestonePayload,
 } from '../types/escrow';
-<<<<<<< HEAD
 import { withRetry } from '../utils/retry';
-=======
 import { Notification, NotificationsResponse } from '../types/notification';
->>>>>>> d431ba40ce53cfcf510d9b702e2540ee53b1f9f1
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -43,7 +40,7 @@ export const escrowApi = {
 
       const { data } = await api.get<EscrowListResponse>('/api/escrows', { params });
       return data;
-    }, { maxRetries: 2 }); // Lighter retry for list calls to avoid stale data
+    }, { maxRetries: 2 });
   },
 
   /** #315 – get single escrow with milestones, parties, events (auto-retry) */
@@ -93,6 +90,20 @@ export const inviteApi = {
   },
   acceptInvitation: async (token: string): Promise<InviteValidation> => {
     const { data } = await api.post<InviteValidation>(`/api/invites/${token}/accept`);
+    return data;
+  },
+};
+
+export interface AppVersionResponse {
+  minSupportedVersion: string;
+  latestVersion: string;
+  updateUrl: string;
+}
+
+export const versionApi = {
+  /** #366 – check minimum supported and latest app versions */
+  check: async (): Promise<AppVersionResponse> => {
+    const { data } = await api.get<AppVersionResponse>('/api/app/version');
     return data;
   },
 };
