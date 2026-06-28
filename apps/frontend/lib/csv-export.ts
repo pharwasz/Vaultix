@@ -1,63 +1,62 @@
 import { IEventResponse } from "@/lib/escrow-api";
 
+export interface ExportFilters {
+  eventType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 /**
- * Converts transaction events to CSV format
+ * Converts transaction events to CSV format with proper column mapping
  */
 export function convertEventsToCSV(events: IEventResponse[]): string {
-  // CSV Headers
+  // CSV Headers as per acceptance criteria
   const headers = [
-    "Date",
     "Escrow ID",
-    "Escrow Title",
-    "Event Type",
+    "Status",
     "Amount",
     "Asset",
-    "Status",
-    "Transaction Hash",
     "Counterparty",
+    "Created At",
+    "Completed At",
+    "Deadline",
   ];
 
   // Convert events to rows
   const rows = events.map((event) => {
-    const date = new Date(event.createdAt).toISOString();
     const escrowId = event.escrowId || "";
-    const escrowTitle = event.escrow?.title || "";
-    const eventType = event.eventType.replace(/_/g, " ");
-
-    // Calculate amount based on event type
-    let amount = "";
-    let asset = "";
-    if (event.escrow) {
-      amount = String(event.escrow.amount);
-      asset = event.escrow.assetIssuer
-        ? `${event.escrow.assetCode}:${event.escrow.assetIssuer}`
-        : event.escrow.assetCode;
-    }
-
-    // Status from escrow or event
     const status = event.escrow?.status || "";
-
-    // Transaction hash from event data
-    const txHash =
-      event.data?.transactionHash || event.data?.stellarTxHash || "";
-
-    // Counterparty (actor)
+    const amount = event.escrow?.amount ? String(event.escrow.amount) : "";
+    const asset = event.escrow?.assetIssuer
+      ? `${event.escrow.assetCode}:${event.escrow.assetIssuer}`
+      : event.escrow?.assetCode || "";
     const counterparty = event.actor?.walletAddress || event.actorId || "";
+    const createdAt = event.createdAt ? new Date(event.createdAt).toISOString() : "";
+    
+    // Completed At - derive from COMPLETED event or escrow data
+    let completedAt = "";
+    if (event.eventType === "COMPLETED" && event.createdAt) {
+      completedAt = new Date(event.createdAt).toISOString();
+    } else if (event.escrow?.completedAt) {
+      completedAt = new Date(event.escrow.completedAt).toISOString();
+    }
+    
+    // Deadline - from escrow data
+    const deadline = event.escrow?.deadline ? new Date(event.escrow.deadline).toISOString() : "";
 
     return [
-      date,
       escrowId,
-      escrowTitle,
-      eventType,
+      status,
       amount,
       asset,
-      status,
-      txHash,
       counterparty,
+      createdAt,
+      completedAt,
+      deadline,
     ];
   });
 
-  // Build CSV string
+  // Build CSV string with proper escaping
   const csvContent = [
     headers.join(","),
     ...rows.map((row) =>
@@ -104,7 +103,7 @@ export function downloadCSV(csvContent: string, filename: string): void {
 /**
  * Generates filename with current date
  */
-export function generateTransactionFilename(): string {
+export function generateTransactionFilename(format: "csv" | "pdf" = "csv"): string {
   const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  return `vaultix-transactions-${date}.csv`;
+  return `vaultix-transactions-${date}.${format}`;
 }
