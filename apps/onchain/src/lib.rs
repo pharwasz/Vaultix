@@ -1491,6 +1491,8 @@ impl VaultixEscrow {
             escrow.depositor.clone()
         };
 
+        // Split uses exact token amounts (not basis points).
+        // winner_amount must be in [0, outstanding]; the remainder goes to the other party.
         let (amount_to_winner, amount_to_other) = match split_winner_amount {
             None => (outstanding, 0i128),
             Some(winner_amount) => {
@@ -1503,6 +1505,15 @@ impl VaultixEscrow {
                 (winner_amount, other_amount)
             }
         };
+
+        // Invariant: total distribution must equal outstanding balance.
+        // Prevents the contract from sending more than it holds for this escrow.
+        let total_distribution = amount_to_winner
+            .checked_add(amount_to_other)
+            .ok_or(Error::InvalidMilestoneAmount)?;
+        if total_distribution != outstanding {
+            return Err(Error::InvalidMilestoneAmount);
+        }
 
         let token_client = token::Client::new(&env, &escrow.token_address);
 
