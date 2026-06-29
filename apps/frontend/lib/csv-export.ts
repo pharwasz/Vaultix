@@ -1,4 +1,4 @@
-import { IEventResponse } from "@/lib/escrow-api";
+import { IEscrowEvent, IEscrow } from "@/types/escrow";
 
 export interface ExportFilters {
   eventType?: string;
@@ -6,11 +6,24 @@ export interface ExportFilters {
   dateTo?: string;
 }
 
+export interface IEventResponse extends IEscrowEvent {
+  escrowId?: string;
+  escrow?: IEscrow & {
+    assetCode?: string;
+    assetIssuer?: string;
+    completedAt?: string;
+    deadline?: string;
+  };
+  actor?: {
+    walletAddress?: string;
+  };
+  actorId?: string;
+}
+
 /**
  * Converts transaction events to CSV format with proper column mapping
  */
 export function convertEventsToCSV(events: IEventResponse[]): string {
-  // CSV Headers as per acceptance criteria
   const headers = [
     "Escrow ID",
     "Status",
@@ -22,7 +35,6 @@ export function convertEventsToCSV(events: IEventResponse[]): string {
     "Deadline",
   ];
 
-  // Convert events to rows
   const rows = events.map((event) => {
     const escrowId = event.escrowId || "";
     const status = event.escrow?.status || "";
@@ -32,43 +44,28 @@ export function convertEventsToCSV(events: IEventResponse[]): string {
       : event.escrow?.assetCode || "";
     const counterparty = event.actor?.walletAddress || event.actorId || "";
     const createdAt = event.createdAt ? new Date(event.createdAt).toISOString() : "";
-    
-    // Completed At - derive from COMPLETED event or escrow data
+
     let completedAt = "";
     if (event.eventType === "COMPLETED" && event.createdAt) {
       completedAt = new Date(event.createdAt).toISOString();
     } else if (event.escrow?.completedAt) {
       completedAt = new Date(event.escrow.completedAt).toISOString();
     }
-    
-    // Deadline - from escrow data
-    const deadline = event.escrow?.deadline ? new Date(event.escrow.deadline).toISOString() : "";
 
-    return [
-      escrowId,
-      status,
-      amount,
-      asset,
-      counterparty,
-      createdAt,
-      completedAt,
-      deadline,
-    ];
+    const deadline = event.escrow?.deadline
+      ? new Date(event.escrow.deadline).toISOString()
+      : "";
+
+    return [escrowId, status, amount, asset, counterparty, createdAt, completedAt, deadline];
   });
 
-  // Build CSV string with proper escaping
   const csvContent = [
     headers.join(","),
     ...rows.map((row) =>
       row
         .map((cell) => {
-          // Escape cells that contain commas, quotes, or newlines
           const cellStr = String(cell);
-          if (
-            cellStr.includes(",") ||
-            cellStr.includes('"') ||
-            cellStr.includes("\n")
-          ) {
+          if (cellStr.includes(",") || cellStr.includes('"') || cellStr.includes("\n")) {
             return `"${cellStr.replace(/"/g, '""')}"`;
           }
           return cellStr;
@@ -96,7 +93,6 @@ export function downloadCSV(csvContent: string, filename: string): void {
   link.click();
   document.body.removeChild(link);
 
-  // Clean up
   URL.revokeObjectURL(url);
 }
 
@@ -104,6 +100,6 @@ export function downloadCSV(csvContent: string, filename: string): void {
  * Generates filename with current date
  */
 export function generateTransactionFilename(format: "csv" | "pdf" = "csv"): string {
-  const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const date = new Date().toISOString().split("T")[0];
   return `vaultix-transactions-${date}.${format}`;
 }
