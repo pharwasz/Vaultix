@@ -1,23 +1,9 @@
-import { IEscrowEvent, IEscrow } from "@/types/escrow";
+import { IEventResponse } from "@/lib/escrow-api";
 
 export interface ExportFilters {
   eventType?: string;
   dateFrom?: string;
   dateTo?: string;
-}
-
-export interface IEventResponse extends IEscrowEvent {
-  escrowId?: string;
-  escrow?: IEscrow & {
-    assetCode?: string;
-    assetIssuer?: string;
-    completedAt?: string;
-    deadline?: string;
-  };
-  actor?: {
-    walletAddress?: string;
-  };
-  actorId?: string;
 }
 
 /**
